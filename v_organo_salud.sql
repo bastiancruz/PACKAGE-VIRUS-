@@ -6,14 +6,14 @@ SELECT
     o.id_juego, 
     o.id_jugada, 
     j.id_jugador,
-    o.organo, 
-    o.color, 
+    o.Organo, 
+    o.Color, 
 
     -- Calculo del puntaje numerico de salud 
     NVL(SUM( 
         CASE 
-            WHEN co.tipo = 'MEDICINA' THEN 1 
-            WHEN co.tipo = 'VIRUS' THEN -1 
+            WHEN co.Tipo = 'MEDICINA' THEN 1 
+            WHEN co.Tipo = 'VIRUS' THEN -1 
             ELSE 0 
         END 
     ), 0) AS puntaje_salud, 
@@ -21,8 +21,8 @@ SELECT
     -- Traduccion del puntaje numerico a estado en texto 
     CASE NVL(SUM( 
             CASE 
-                WHEN co.tipo = 'MEDICINA' THEN 1 
-                WHEN co.tipo = 'VIRUS' THEN -1 
+                WHEN co.Tipo = 'MEDICINA' THEN 1 
+                WHEN co.Tipo = 'VIRUS' THEN -1 
                 ELSE 0 
             END 
         ), 0) 
@@ -42,5 +42,5 @@ GROUP BY
     o.id_juego, 
     o.id_jugada, 
     j.id_jugador, 
-    o.organo, 
-    o.color;
+    o.Organo, 
+    o.Color;
