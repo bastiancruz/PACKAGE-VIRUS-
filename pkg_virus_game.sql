@@ -40,10 +40,10 @@ CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
         v_cant_color NUMBER := 0;
     BEGIN
         -- 1. Obtener el ID del jugador dueño de la jugada
-        SELECT id_jugador 
+        SELECT id_jugador
         INTO v_jugador_id
         FROM jugada
-        WHERE id_juego = p_juego_id 
+        WHERE id_juego = p_juego_id
           AND id_jugada = p_jugada_id;
 
         -- 2. Consulta la vista para verificar organos 'vivos' usando el v_jugador_id
@@ -68,7 +68,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
         IF v_cant_color > 0 THEN
             RAISE_APPLICATION_ERROR(-20002, 'Error: Ya tienes un organo de color "' || p_color || '" en tu mesa.');
         END IF;
-        
+
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
             RAISE_APPLICATION_ERROR(-20007, 'Error: La jugada especificada no existe.');
@@ -85,14 +85,14 @@ CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
         p_color IN VARCHAR2,
         p_organo_id  IN NUMBER
     ) IS
-        v_puntaje_actual   NUMBER := 0; 
+        v_puntaje_actual   NUMBER := 0;
         v_carta_remover    NUMBER;
         v_jugador_cubridor NUMBER;
         v_dueno_organo     NUMBER;
     BEGIN
 
         -- 1. Obtener la salud actual del organo objetivo
-        SELECT NVL(puntaje_salud, 0) 
+        SELECT NVL(puntaje_salud, 0)
         INTO v_puntaje_actual
         FROM v_organo_salud
         WHERE ID_organo = p_organo_id;
@@ -110,7 +110,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
         SELECT id_jugador INTO v_dueno_organo
         FROM v_organo_salud
         WHERE id_organo = p_organo_id;
-        
+
         -- 4. Restricciones de Ataque y Cura cruzada
         IF UPPER(p_tipo_cubre) = 'VIRUS' AND v_jugador_cubridor = v_dueno_organo THEN
             RAISE_APPLICATION_ERROR(-20005, 'Jugada inválida: No puedes jugar un virus sobre tus propios órganos.');
@@ -144,7 +144,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
             ELSIF v_puntaje_actual = -1 THEN
                 -- Desvincula primer virus viejo
                 UPDATE cubre_organo SET id_carta_cubierta = NULL WHERE id_carta_cubierta = p_organo_id;
-            
+
                 -- Inserta virus nuevo descartado (NULL)
                 INSERT INTO cubre_organo (tipo, ID_carta, ID_jugada, ID_juego, color, ID_carta_cubierta)
                 VALUES (UPPER(p_tipo_cubre), p_cubre_carta_id, p_jugada_id, p_juego_id, UPPER(p_color), NULL);
