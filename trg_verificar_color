@@ -1,0 +1,22 @@
+CREATE OR REPLACE TRIGGER VERIFICAR_COLOR
+BEFORE INSERT OR UPDATE OF Color, ID_carta_cubierta ON CUBRE_ORGANO
+FOR EACH ROW
+DECLARE
+    v_color_organo VARCHAR2(30);
+BEGIN
+    -- Obtener el color del órgano objetivo en la mesa
+    SELECT Color 
+      INTO v_color_organo
+      FROM ORGANO_EN_MESA
+     WHERE ID_carta = :NEW.ID_carta_cubierta;
+
+    -- Comparar colores directamente
+    IF :NEW.Color <> v_color_organo THEN
+        RAISE_APPLICATION_ERROR(-20004, 
+            'Regla de color violada: La carta jugada es ' || :NEW.Color || 
+            ' y no coincide con el color del órgano (' || v_color_organo || ').');
+    END IF;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20005, 'Error: El órgano objetivo especificado no existe en la mesa.');
+END;
