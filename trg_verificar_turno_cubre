@@ -1,0 +1,26 @@
+CREATE OR REPLACE TRIGGER VERIFICAR_TURNO_CUBRE
+BEFORE INSERT ON CUBRE_ORGANO
+FOR EACH ROW
+DECLARE
+    v_pasada NUMBER(1);
+    v_total_organos NUMBER;
+BEGIN --Primero se ve si la jugada fue una pasada
+    SELECT Pasada INTO v_pasada
+      FROM JUGADA
+     WHERE ID_juego = :NEW.ID_juego 
+       AND ID_jugada = :NEW.ID_jugada;
+
+    IF v_pasada = 1 THEN
+        RAISE_APPLICATION_ERROR(-20011, 'Error: En una jugada donde se descarto carta no se permite Curar/Atacar.');
+    END IF;
+--luego se ve si se jugo un organo, si es asi tira error
+    SELECT COUNT(*) INTO v_total_organos
+      FROM ORGANO_EN_MESA
+     WHERE ID_juego = :NEW.ID_juego 
+       AND ID_jugada = :NEW.ID_jugada;
+
+    IF v_total_organos > 0 THEN
+        RAISE_APPLICATION_ERROR(-20012, 'Error: Solo se permite jugar UNA carta en total por turno.');
+    END IF;
+END;
+/
