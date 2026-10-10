@@ -1,7 +1,7 @@
 -- ============================================================
 -- PAQUETE: ESPECIFICACION
 -- ============================================================
-CREATE OR REPLACE PACKAGE pkg_virus_game AS
+CREATE OR REPLACE PACKAGE pkg_reglas_organo AS
     PROCEDURE valida_nuevo_organo (
         p_juego_id  IN NUMBER,
         p_jugada_id IN NUMBER,
@@ -17,13 +17,13 @@ CREATE OR REPLACE PACKAGE pkg_virus_game AS
         p_color IN VARCHAR2,
         p_organo_id  IN NUMBER
     );
-END pkg_virus_game;
+END pkg_reglas_organo;
 /
 
 -- ============================================================
 -- PAQUETE: CUERPO
 -- ============================================================
-CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
+CREATE OR REPLACE PACKAGE BODY pkg_reglas_organo AS
 
     ------------------------------------------------------------
     -- VALIDA COLOCACION DE NUEVO ORGANO (Puntos 4 y 5)
@@ -110,16 +110,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
         SELECT id_jugador INTO v_dueno_organo
         FROM v_organo_salud
         WHERE id_organo = p_organo_id;
-
-        -- 4. Restricciones de Ataque y Cura cruzada
-        IF UPPER(p_tipo_cubre) = 'VIRUS' AND v_jugador_cubridor = v_dueno_organo THEN
-            RAISE_APPLICATION_ERROR(-20005, 'Jugada inválida: No puedes jugar un virus sobre tus propios órganos.');
-        END IF;
-
-        IF UPPER(p_tipo_cubre) = 'MEDICINA' AND v_jugador_cubridor != v_dueno_organo THEN
-            RAISE_APPLICATION_ERROR(-20006, 'Jugada inválida: Solo puedes aplicar medicinas sobre tus propios órganos.');
-        END IF;
-
+        
         --------------------------------------------------------
         -- CASO A: SE JUEGA UN VIRUS (-1)
         --------------------------------------------------------
@@ -181,4 +172,4 @@ CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
             RAISE_APPLICATION_ERROR(-20004, 'Error: El organo o la jugada no existen.');
     END aplicar_cobertura;
 
-END pkg_virus_game;
+END pkg_reglas_organo;

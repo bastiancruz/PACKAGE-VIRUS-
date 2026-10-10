@@ -1,7 +1,7 @@
 -- ============================================================
 -- PAQUETE: ESPECIFICACION
 -- ============================================================
-CREATE OR REPLACE PACKAGE pkg_virus_game AS
+CREATE OR REPLACE PACKAGE pkg_reglas_del_juego AS
 
     PROCEDURE verificar_victoria (
         p_juego_id   IN NUMBER,
@@ -17,13 +17,13 @@ CREATE OR REPLACE PACKAGE pkg_virus_game AS
         p_id_organo  IN NUMBER,
         p_jugador_id IN NUMBER
     );
-END pkg_virus_game;
+END pkg_reglas_del_juego;
 /
 
 -- ============================================================
 -- PAQUETE: CUERPO
 -- ============================================================
-CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
+CREATE OR REPLACE PACKAGE BODY pkg_reglas_del_juego AS
 
     /*------------------------------------------------------------
       VERIFICA SI EL JUGADOR GANÓ
@@ -112,5 +112,5 @@ CREATE OR REPLACE PACKAGE BODY pkg_virus_game AS
             END IF;
         END IF;
     END;
-END pkg_virus_game;
+END pkg_reglas_del_juego;
 /
