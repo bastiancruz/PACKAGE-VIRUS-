@@ -9,7 +9,8 @@ BEGIN
         SELECT NVL(MAX(ID_jugada), 0) + 1
           INTO v_max_id
           FROM JUGADA
-         WHERE ID_juego = :NEW.ID_juego;
+         WHERE ID_juego = :NEW.ID_juego
+           FOR UPDATE;
 
         :NEW.ID_jugada := v_max_id;
     END IF;
