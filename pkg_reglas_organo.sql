@@ -88,31 +88,39 @@ CREATE OR REPLACE PACKAGE BODY pkg_reglas_organo AS
         v_puntaje_actual   NUMBER := 0;
         v_carta_remover    NUMBER;
         v_color_organo     VARCHAR2(30);
+        v_juego_organo     NUMBER;
     BEGIN
          -- 1. Validar tipo de carta
         IF UPPER(p_tipo_cubre) NOT IN ('VIRUS', 'MEDICINA') THEN
             RAISE_APPLICATION_ERROR(-20019, 'Tipo de carta inválido: ' || p_tipo_cubre);
         END IF;
 
-        -- 2. Obtener la salud actual del organo objetivo
-        SELECT NVL(puntaje_salud, 0), Color
-        INTO v_puntaje_actual, v_color_organo
+        -- 2. Obtener salud, color y juego del órgano objetivo
+        SELECT NVL(puntaje_salud, 0), Color, id_juego
+        INTO v_puntaje_actual, v_color_organo, v_juego_organo
         FROM v_organo_salud
         WHERE ID_organo = p_organo_id;
 
-        -- 3. Validar color (aplica a TODAS las cartas, vinculadas o descartadas)
+        -- 3. Validar que el órgano pertenece al juego indicado
+        IF v_juego_organo <> p_juego_id THEN
+            RAISE_APPLICATION_ERROR(-20021,
+                'El órgano ' || p_organo_id || 
+                ' no pertenece al juego ' || p_juego_id);
+        END IF;
+
+        -- 4. Validar color (aplica a TODAS las cartas, vinculadas o descartadas)
         IF UPPER(p_color) <> UPPER(v_color_organo) THEN
             RAISE_APPLICATION_ERROR(-20013,
                 'Regla de color violada: la carta es ' || p_color ||
                 ' pero el órgano es ' || v_color_organo);
         END IF;
 
-        -- 4. Restriccion: Organo inmune (+2) no puede recibir virus
+        -- 5. Restriccion: Organo inmune (+2) no puede recibir virus
         IF v_puntaje_actual = 2 AND UPPER(p_tipo_cubre) = 'VIRUS' THEN
             RAISE_APPLICATION_ERROR(-20003, 'Error: El organo esta INMUNE (+2) y no puede ser atacado.');
         END IF;
 
-        -- 5. Restricción: órgano inmune no puede recibir más medicinas
+        -- . Restricción: órgano inmune no puede recibir más medicinas
         IF v_puntaje_actual = 2 AND UPPER(p_tipo_cubre) = 'MEDICINA' THEN
             RAISE_APPLICATION_ERROR(-20020,
                 'El órgano ya está INMUNE (+2). No puedes aplicar más medicinas.');
