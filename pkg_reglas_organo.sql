@@ -87,30 +87,37 @@ CREATE OR REPLACE PACKAGE BODY pkg_reglas_organo AS
     ) IS
         v_puntaje_actual   NUMBER := 0;
         v_carta_remover    NUMBER;
-        v_jugador_cubridor NUMBER;
-        v_dueno_organo     NUMBER;
+        v_color_organo     VARCHAR2(30);
     BEGIN
+         -- 1. Validar tipo de carta
+        IF UPPER(p_tipo_cubre) NOT IN ('VIRUS', 'MEDICINA') THEN
+            RAISE_APPLICATION_ERROR(-20019, 'Tipo de carta inválido: ' || p_tipo_cubre);
+        END IF;
 
-        -- 1. Obtener la salud actual del organo objetivo
-        SELECT NVL(puntaje_salud, 0)
-        INTO v_puntaje_actual
+        -- 2. Obtener la salud actual del organo objetivo
+        SELECT NVL(puntaje_salud, 0), Color
+        INTO v_puntaje_actual, v_color_organo
         FROM v_organo_salud
         WHERE ID_organo = p_organo_id;
 
-        -- 2. Restriccion: Organo inmune (+2) no puede recibir virus
+        -- 3. Validar color (aplica a TODAS las cartas, vinculadas o descartadas)
+        IF UPPER(p_color) <> UPPER(v_color_organo) THEN
+            RAISE_APPLICATION_ERROR(-20013,
+                'Regla de color violada: la carta es ' || p_color ||
+                ' pero el órgano es ' || v_color_organo);
+        END IF;
+
+        -- 4. Restriccion: Organo inmune (+2) no puede recibir virus
         IF v_puntaje_actual = 2 AND UPPER(p_tipo_cubre) = 'VIRUS' THEN
             RAISE_APPLICATION_ERROR(-20003, 'Error: El organo esta INMUNE (+2) y no puede ser atacado.');
         END IF;
 
-        -- 3. Identificar quién está haciendo la jugada y de quién es el órgano
-        SELECT ID_jugador INTO v_jugador_cubridor
-        FROM jugada
-        WHERE ID_juego = p_juego_id AND ID_jugada = p_jugada_id;
+        -- 5. Restricción: órgano inmune no puede recibir más medicinas
+        IF v_puntaje_actual = 2 AND UPPER(p_tipo_cubre) = 'MEDICINA' THEN
+            RAISE_APPLICATION_ERROR(-20020,
+                'El órgano ya está INMUNE (+2). No puedes aplicar más medicinas.');
+        END IF;
 
-        SELECT id_jugador INTO v_dueno_organo
-        FROM v_organo_salud
-        WHERE id_organo = p_organo_id;
-        
         --------------------------------------------------------
         -- CASO A: SE JUEGA UN VIRUS (-1)
         --------------------------------------------------------
