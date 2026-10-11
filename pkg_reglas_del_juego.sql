@@ -47,7 +47,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_reglas_del_juego AS
         INTO v_cant_organos
         FROM v_organo_salud
         WHERE ID_jugador = v_jugador_id
-        AND puntaje_salud >= 0;
+            AND puntaje_salud >= 0;
 
         IF v_cant_organos = 4 THEN
             UPDATE JUEGO
@@ -111,6 +111,11 @@ CREATE OR REPLACE PACKAGE BODY pkg_reglas_del_juego AS
                 );
             END IF;
         END IF;
-    END;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20015, 'El órgano especificado no existe en mesa.');
+
+    END prc_validar_ataque_o_cura;
 END pkg_reglas_del_juego;
 /
