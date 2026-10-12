@@ -37,6 +37,7 @@ END;
 CREATE OR REPLACE TRIGGER trg_validar_ataque_cura
 BEFORE INSERT ON CUBRE_ORGANO
 FOR EACH ROW
+FOLLOWS trg_verificar_turno_cubre
 DECLARE
     v_jugador_id NUMBER;
 BEGIN

@@ -1,7 +1,8 @@
--- Trigger 1: Valida al insertar un nuevo organo a la mesa
+-- Trigger: Valida al insertar un nuevo organo a la mesa
 CREATE OR REPLACE TRIGGER trg_valida_organo_mesa
 BEFORE INSERT ON organo_en_mesa
 FOR EACH ROW
+FOLLOWS VERIFICAR_TURNO_ORGANO
 BEGIN
     pkg_reglas_organo.valida_nuevo_organo(
         p_juego_id  => :NEW.ID_juego,
