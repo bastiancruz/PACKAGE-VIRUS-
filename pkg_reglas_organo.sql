@@ -117,74 +117,18 @@ CREATE OR REPLACE PACKAGE BODY pkg_reglas_organo AS
 
         -- 5. Restriccion: Organo inmune (+2) no puede recibir virus
         IF v_puntaje_actual = 2 AND UPPER(p_tipo_cubre) = 'VIRUS' THEN
-            RAISE_APPLICATION_ERROR(-20003, 'Error: El organo esta INMUNE (+2) y no puede ser atacado.');
+            RAISE_APPLICATION_ERROR(-20003, 'Error: El organo esta INMUNE y no puede ser atacado.');
         END IF;
 
-        -- . Restricción: órgano inmune no puede recibir más medicinas
+        -- 6. Restricción: órgano inmune no puede recibir más medicinas
         IF v_puntaje_actual = 2 AND UPPER(p_tipo_cubre) = 'MEDICINA' THEN
             RAISE_APPLICATION_ERROR(-20020,
                 'El órgano ya está INMUNE (+2). No puedes aplicar más medicinas.');
         END IF;
 
-        --------------------------------------------------------
-        -- CASO A: SE JUEGA UN VIRUS (-1)
-        --------------------------------------------------------
-        IF UPPER(p_tipo_cubre) = 'VIRUS' THEN
-            IF v_puntaje_actual = 1 THEN
-                -- Neutraliza medicina vieja
-                SELECT id_carta INTO v_carta_remover
-                FROM cubre_organo
-                WHERE ID_carta_cubierta = p_organo_id AND UPPER(tipo) = 'MEDICINA' AND ROWNUM = 1;
-
-                UPDATE cubre_organo SET id_carta_cubierta = NULL WHERE id_carta = v_carta_remover;
-
-                -- Inserta virus nuevo descartado (NULL)
-                INSERT INTO cubre_organo (tipo, ID_carta, ID_jugada, ID_juego, color, ID_carta_cubierta)
-                VALUES (UPPER(p_tipo_cubre), p_cubre_carta_id, p_jugada_id, p_juego_id, UPPER(p_color), NULL);
-
-            ELSIF v_puntaje_actual = 0 THEN
-                -- Inserta virus vinculado al organo
-                INSERT INTO cubre_organo (tipo, ID_carta, ID_jugada, ID_juego, color, ID_carta_cubierta)
-                VALUES (UPPER(p_tipo_cubre), p_cubre_carta_id, p_jugada_id, p_juego_id, UPPER(p_color), p_organo_id);
-
-            ELSIF v_puntaje_actual = -1 THEN
-                -- Desvincula primer virus viejo
-                UPDATE cubre_organo SET id_carta_cubierta = NULL WHERE id_carta_cubierta = p_organo_id;
-
-                -- Inserta virus nuevo descartado (NULL)
-                INSERT INTO cubre_organo (tipo, ID_carta, ID_jugada, ID_juego, color, ID_carta_cubierta)
-                VALUES (UPPER(p_tipo_cubre), p_cubre_carta_id, p_jugada_id, p_juego_id, UPPER(p_color), NULL);
-
-                -- Elimina el organo muerto
-                DELETE FROM organo_en_mesa WHERE id_carta = p_organo_id;
-            END IF;
-
-        --------------------------------------------------------
-        -- CASO B: SE JUEGA UNA MEDICINA / CURA (+1)
-        --------------------------------------------------------
-        ELSIF UPPER(p_tipo_cubre) = 'MEDICINA' THEN
-            IF v_puntaje_actual = -1 THEN
-                -- Neutraliza virus viejo
-                SELECT id_carta INTO v_carta_remover
-                FROM cubre_organo
-                WHERE id_carta_cubierta = p_organo_id AND UPPER(tipo) = 'VIRUS' AND ROWNUM = 1;
-
-                UPDATE cubre_organo SET id_carta_cubierta = NULL WHERE id_carta = v_carta_remover;
-
-                -- Inserta medicina nueva descartada (NULL)
-                INSERT INTO cubre_organo (tipo, ID_carta, ID_jugada, ID_juego, color, ID_carta_cubierta)
-                VALUES (UPPER(p_tipo_cubre), p_cubre_carta_id, p_jugada_id, p_juego_id, UPPER(p_color), NULL);
-
-            ELSIF v_puntaje_actual IN (0, 1) THEN
-                -- Inserta medicina vinculada al organo
-                INSERT INTO cubre_organo (tipo, ID_carta, ID_jugada, ID_juego, color, ID_carta_cubierta)
-                VALUES (UPPER(p_tipo_cubre),p_cubre_carta_id, p_jugada_id, p_juego_id, UPPER(p_color), p_organo_id);
-            END IF;
-        END IF;
-
-        --3. Restriccion de organo muerto o extirpado
-        IF v_puntaje_actual <= -2 THEN
-        RAISE_APPLICATION_ERROR(-20005, 'Error: El organo ya se encuentra EXTIRPADO, por lo que no se le puede atacar ni cubrir.');
+        --7. Restriccion de organo muerto o extirpado
+        IF v_puntaje_actual = -2 THEN
+        RAISE_APPLICATION_ERROR(-20005, 'Error: El organo ya se encuentra EXTIRPADO, por lo que no se le puede aplicar virus ni medicinas.');
         END IF;
 
         INSERT INTO cubre_organo (tipo, ID_carta, ID_jugada, ID_juego, color, ID_carta_cubierta)
