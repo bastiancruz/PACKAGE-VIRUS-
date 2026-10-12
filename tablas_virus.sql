@@ -48,7 +48,7 @@ CREATE TABLE CUBRE_ORGANO
   ID_jugada NUMBER(20) NOT NULL,
   ID_juego NUMBER(20) NOT NULL,
   Color VARCHAR2(30) NOT NULL,
-  ID_carta_cubierta NUMBER(20),
+  ID_carta_cubierta NUMBER(20) NOT NULL,
   PRIMARY KEY (ID_carta),
   CONSTRAINT chk_tipo_cubre CHECK (Tipo IN ('VIRUS', 'MEDICINA')) ,
   CONSTRAINT chk_color_c CHECK (Color IN ('AMARILLO','ROJO','AZUL','VERDE')) ,
