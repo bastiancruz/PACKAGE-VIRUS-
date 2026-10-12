@@ -117,5 +117,114 @@ CREATE OR REPLACE PACKAGE BODY pkg_reglas_del_juego AS
             RAISE_APPLICATION_ERROR(-20015, 'El órgano especificado no existe en mesa.');
 
     END prc_validar_ataque_o_cura;
+
+    PROCEDURE VALIDAR_COLOR_ORGANO (
+        p_color_carta   IN CUBRE_ORGANO.Color%TYPE,
+        p_id_carta      IN CUBRE_ORGANO.ID_carta_cubierta%TYPE
+    )
+    AS
+        v_color_organo ORGANO_EN_MESA.Color%TYPE;
+    BEGIN
+        -- Obtener el color del órgano objetivo en la mesa
+        SELECT Color
+        INTO v_color_organo
+        FROM ORGANO_EN_MESA
+        WHERE ID_carta = p_id_carta;
+
+        -- Comparar los colores
+        IF p_color_carta <> v_color_organo THEN
+            RAISE_APPLICATION_ERROR(
+                -20004,
+                'Regla de color violada: La carta jugada es '
+                || p_color_carta
+                || ' y no coincide con el color del órgano ('
+                || v_color_organo || ').'
+            );
+        END IF;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(
+                -20005,
+                'Error: El órgano objetivo especificado no existe en la mesa.'
+            );
+    END;
+
+
+    PROCEDURE VALIDAR_TURNO_CUBRE (
+        p_id_juego  IN CUBRE_ORGANO.ID_juego%TYPE,
+        p_id_jugada IN CUBRE_ORGANO.ID_jugada%TYPE
+    )
+    AS
+        v_pasada        JUGADA.Pasada%TYPE;
+        v_total_organos NUMBER;
+    BEGIN
+        -- Primero se comprueba si la jugada fue una pasada
+        SELECT Pasada
+        INTO v_pasada
+        FROM JUGADA
+        WHERE ID_juego = p_id_juego
+        AND ID_jugada = p_id_jugada;
+
+        IF v_pasada = 1 THEN
+            RAISE_APPLICATION_ERROR(
+                -20011,
+                'Error: En una jugada donde se descarto carta no se permite Curar/Atacar.'
+            );
+        END IF;
+
+        -- Se comprueba si ya se jugó un órgano en ese turno
+        SELECT COUNT(*)
+        INTO v_total_organos
+        FROM ORGANO_EN_MESA
+        WHERE ID_juego = p_id_juego
+        AND ID_jugada = p_id_jugada;
+
+        IF v_total_organos > 0 THEN
+            RAISE_APPLICATION_ERROR(
+                -20012,
+                'Error: Solo se permite jugar UNA carta en total por turno.'
+            );
+        END IF;
+    END;
+
+
+    PROCEDURE VALIDAR_TURNO_ORGANO (
+        p_id_juego  IN ORGANO_EN_MESA.ID_juego%TYPE,
+        p_id_jugada IN ORGANO_EN_MESA.ID_jugada%TYPE
+    )
+    AS
+        v_pasada           JUGADA.Pasada%TYPE;
+        v_total_cubiertas  NUMBER;
+    BEGIN
+        -- Primero se comprueba si la jugada fue una pasada
+        SELECT Pasada
+        INTO v_pasada
+        FROM JUGADA
+        WHERE ID_juego = p_id_juego
+        AND ID_jugada = p_id_jugada;
+
+        IF v_pasada = 1 THEN
+            RAISE_APPLICATION_ERROR(
+                -20011,
+                'Error: En una jugada donde se descarto carta no se permite jugar órganos a la mesa.'
+            );
+        END IF;
+
+        -- Se comprueba si ya se jugó un virus o una cura
+        SELECT COUNT(*)
+        INTO v_total_cubiertas
+        FROM CUBRE_ORGANO
+        WHERE ID_juego = p_id_juego
+        AND ID_jugada = p_id_jugada;
+
+        IF v_total_cubiertas > 0 THEN
+            RAISE_APPLICATION_ERROR(
+                -20012,
+                'Error: Solo se permite jugar UNA carta en total por turno.'
+            );
+        END IF;
+    END;
+
 END pkg_reglas_del_juego;
 /

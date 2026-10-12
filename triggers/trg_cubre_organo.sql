@@ -1,4 +1,3 @@
-
 CREATE OR REPLACE TRIGGER trg_despues_cubre
 AFTER INSERT ON CUBRE_ORGANO
 FOR EACH ROW
@@ -35,55 +34,24 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE TRIGGER trg_verificar_color
-BEFORE INSERT OR UPDATE OF Color, ID_carta_cubierta ON CUBRE_ORGANO
-FOR EACH ROW
-FOLLOWS trg_validar_ataque_cura
-WHEN (NEW.ID_carta_cubierta IS NOT NULL)
-DECLARE
-    v_color_organo VARCHAR2(30);
-BEGIN
-    -- Obtener el color del órgano objetivo en la mesa
-    SELECT Color
-    INTO v_color_organo
-    FROM ORGANO_EN_MESA
-     WHERE ID_carta = :NEW.ID_carta_cubierta;
-
-    -- Comparar colores directamente
-    IF :NEW.Color <> v_color_organo THEN
-        RAISE_APPLICATION_ERROR(-20016,
-            'Regla de color violada: La carta jugada es ' || :NEW.Color ||
-            ' y no coincide con el color del órgano (' || v_color_organo || ').');
-    END IF;
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(-20017, 'Error: El órgano objetivo especificado no existe en la mesa.');
-END;
-/
-
 CREATE OR REPLACE TRIGGER trg_verificar_turno_cubre
 BEFORE INSERT ON CUBRE_ORGANO
 FOR EACH ROW
-DECLARE
-    v_pasada NUMBER(1);
-    v_total_organos NUMBER;
-BEGIN --Primero se ve si la jugada fue una pasada
-    SELECT Pasada INTO v_pasada
-      FROM JUGADA
-     WHERE ID_juego = :NEW.ID_juego 
-       AND ID_jugada = :NEW.ID_jugada;
-
-    IF v_pasada = 1 THEN
-        RAISE_APPLICATION_ERROR(-20011, 'Error: En una jugada donde se descarto carta no se permite Curar/Atacar.');
-    END IF;
---luego se ve si se jugo un organo, si es asi tira error
-    SELECT COUNT(*) INTO v_total_organos
-      FROM ORGANO_EN_MESA
-     WHERE ID_juego = :NEW.ID_juego 
-       AND ID_jugada = :NEW.ID_jugada;
-
-    IF v_total_organos > 0 THEN
-        RAISE_APPLICATION_ERROR(-20012, 'Error: Solo se permite jugar UNA carta en total por turno.');
-    END IF;
+BEGIN
+    pkg_reglas_del_juego.VALIDAR_TURNO_CUBRE(
+        p_id_juego  => :NEW.ID_juego,
+        p_id_jugada => :NEW.ID_jugada
+    );
 END;
 /
+
+CREATE OR REPLACE TRIGGER trg_verificar_color
+BEFORE INSERT OR UPDATE OF Color, ID_carta_cubierta
+ON CUBRE_ORGANO
+FOR EACH ROW
+BEGIN
+    pkg_reglas_del_juego.VALIDAR_COLOR_ORGANO(
+        p_color_carta => :NEW.Color,
+        p_id_carta    => :NEW.ID_carta_cubierta
+    );
+END;

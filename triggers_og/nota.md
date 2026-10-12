@@ -1,0 +1,3 @@
+Esta carpeta guarda todos los triggers como estaban, la carpeta triggers los reune todos de nuevo según tabla.
+Lo que sí hice fue separar los triggers de la Hilda en procedures que puse en el package reglas_del_juego, entonces ahora sus triggers (que antes contenían toda la lógica) solo llamarían al procedure (donde dejé la lógica que tenía en los triggers).
+Espero no haberme equivocado en algo x'd
