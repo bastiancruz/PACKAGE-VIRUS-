@@ -182,6 +182,14 @@ CREATE OR REPLACE PACKAGE BODY pkg_reglas_organo AS
             END IF;
         END IF;
 
+        --3. Restriccion de organo muerto o extirpado
+        IF v_puntaje_actual <= -2 THEN
+        RAISE_APPLICATION_ERROR(-20005, 'Error: El organo ya se encuentra EXTIRPADO, por lo que no se le puede atacar ni cubrir.');
+        END IF;
+
+        INSERT INTO cubre_organo (tipo, ID_carta, ID_jugada, ID_juego, color, ID_carta_cubierta)
+        VALUES (UPPER(p_tipo_cubre), p_cubre_carta_id, p_jugada_id, p_juego_id, UPPER(p_color), p_organo_id);
+
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
             RAISE_APPLICATION_ERROR(-20004, 'Error: El organo o la jugada no existen.');
