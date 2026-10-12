@@ -2,6 +2,7 @@ CREATE OR REPLACE TRIGGER trg_verificar_color
 BEFORE INSERT OR UPDATE OF Color, ID_carta_cubierta ON CUBRE_ORGANO
 FOR EACH ROW
 WHEN (NEW.ID_carta_cubierta IS NOT NULL)
+FOLLOWS trg_validar_ataque_cura
 DECLARE
     v_color_organo VARCHAR2(30);
 BEGIN
