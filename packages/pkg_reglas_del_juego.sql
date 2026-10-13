@@ -17,6 +17,21 @@ CREATE OR REPLACE PACKAGE pkg_reglas_del_juego AS
         p_id_organo  IN NUMBER,
         p_jugador_id IN NUMBER
     );
+
+    PROCEDURE validar_color_organo (
+        p_color_carta   IN CUBRE_ORGANO.Color%TYPE,
+        p_id_carta      IN ORGANO_EN_MESA.ID_carta%TYPE
+    );
+
+    PROCEDURE validar_turno_cubre (
+        p_id_juego  IN CUBRE_ORGANO.ID_juego%TYPE,
+        p_id_jugada IN CUBRE_ORGANO.ID_jugada%TYPE
+    );
+
+    PROCEDURE validar_turno_organo (
+        p_id_juego  IN ORGANO_EN_MESA.ID_juego%TYPE,
+        p_id_jugada IN ORGANO_EN_MESA.ID_jugada%TYPE
+    );
 END pkg_reglas_del_juego;
 /
 
