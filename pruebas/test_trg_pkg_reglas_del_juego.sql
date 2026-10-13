@@ -230,3 +230,132 @@ END;
 /
 
 --------------------------------------------------------------------------------
+-- prueba trg_valida_organo_mesa
+SET SERVEROUTPUT ON;
+
+SAVEPOINT prueba_valida_organo;
+
+DECLARE
+    v_jugada_id JUGADA.ID_jugada%TYPE;
+    v_carta_id  ORGANO_EN_MESA.ID_carta%TYPE;
+BEGIN
+    SELECT MIN(j.ID_jugada)
+    INTO v_jugada_id
+    FROM JUGADA j
+    WHERE j.ID_juego = 1
+      AND j.Pasada = 0
+      AND NOT EXISTS (
+          SELECT 1
+          FROM ORGANO_EN_MESA o
+          WHERE o.ID_juego = j.ID_juego
+            AND o.ID_jugada = j.ID_jugada
+      )
+      AND NOT EXISTS (
+          SELECT 1
+          FROM CUBRE_ORGANO c
+          WHERE c.ID_juego = j.ID_juego
+            AND c.ID_jugada = j.ID_jugada
+      );
+
+    IF v_jugada_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(
+            -20050,
+            'No hay jugadas disponibles para la prueba.'
+        );
+    END IF;
+
+    SELECT NVL(MAX(ID_carta), 0) + 1
+    INTO v_carta_id
+    FROM ORGANO_EN_MESA;
+
+    INSERT INTO ORGANO_EN_MESA (
+        Organo, ID_carta, Color, ID_jugada, ID_juego
+    )
+    VALUES (
+        'ESTOMAGO', v_carta_id, 'VERDE', v_jugada_id, 1
+    );
+
+    DBMS_OUTPUT.PUT_LINE(
+        'PRUEBA CORRECTA: se aceptó el órgano en la jugada '
+        || v_jugada_id
+    );
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(
+            'La prueba fue rechazada: ' || SQLERRM
+        );
+END;
+/
+
+ROLLBACK TO prueba_valida_organo;
+
+--------------------------------------------------------------------------------
+-- prueba trg_despues_organo
+SET SERVEROUTPUT ON;
+
+SAVEPOINT prueba_despues_organo;
+
+DECLARE
+    v_jugada_id JUGADA.ID_jugada%TYPE;
+    v_carta_id  ORGANO_EN_MESA.ID_carta%TYPE;
+    v_estado    JUEGO.Estado%TYPE;
+BEGIN
+    SELECT MIN(j.ID_jugada)
+    INTO v_jugada_id
+    FROM JUGADA j
+    WHERE j.ID_juego = 1
+      AND j.Pasada = 0
+      AND NOT EXISTS (
+          SELECT 1
+          FROM ORGANO_EN_MESA o
+          WHERE o.ID_juego = j.ID_juego
+            AND o.ID_jugada = j.ID_jugada
+      )
+      AND NOT EXISTS (
+          SELECT 1
+          FROM CUBRE_ORGANO c
+          WHERE c.ID_juego = j.ID_juego
+            AND c.ID_jugada = j.ID_jugada
+      );
+
+    IF v_jugada_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(
+            -20050,
+            'No hay jugadas disponibles para la prueba.'
+        );
+    END IF;
+
+    SELECT NVL(MAX(ID_carta), 0) + 1
+    INTO v_carta_id
+    FROM ORGANO_EN_MESA;
+
+    INSERT INTO ORGANO_EN_MESA (
+        Organo, ID_carta, Color, ID_jugada, ID_juego
+    )
+    VALUES (
+        'ESTOMAGO', v_carta_id, 'VERDE', v_jugada_id, 1
+    );
+
+    SELECT Estado
+    INTO v_estado
+    FROM JUEGO
+    WHERE ID_juego = 1;
+
+    DBMS_OUTPUT.PUT_LINE(
+        'INSERT correcto: trg_despues_organo terminó sin errores.'
+    );
+
+    DBMS_OUTPUT.PUT_LINE(
+        'Estado del juego durante la prueba: ' || v_estado
+    );
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(
+            'ERROR durante la prueba: ' || SQLERRM
+        );
+END;
+/
+
+ROLLBACK TO prueba_despues_organo;
