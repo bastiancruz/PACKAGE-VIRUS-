@@ -68,6 +68,9 @@ BEGIN
 END;
 /
 
+
+create or replace trigger 
+
 CREATE OR REPLACE TRIGGER trg_verificar_color
 BEFORE INSERT OR UPDATE OF Color, ID_carta_cubierta
 ON CUBRE_ORGANO
