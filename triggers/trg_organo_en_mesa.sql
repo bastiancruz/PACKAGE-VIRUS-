@@ -37,15 +37,3 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE TRIGGER trg_despues_organo
-AFTER INSERT ON ORGANO_EN_MESA
-FOR EACH ROW
-BEGIN
-
-    pkg_reglas_del_juego.verificar_victoria(
-        p_jugada_id => :NEW.ID_jugada,
-        p_juego_id => :NEW.ID_juego
-    );
-
-END;
-/
