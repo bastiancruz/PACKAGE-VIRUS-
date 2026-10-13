@@ -18,9 +18,9 @@ CREATE OR REPLACE PACKAGE pkg_reglas_del_juego AS
         p_jugador_id IN NUMBER
     );
 
-    PROCEDURE validar_color_organo (
+    PROCEDURE VALIDAR_COLOR_ORGANO (
         p_color_carta   IN CUBRE_ORGANO.Color%TYPE,
-        p_id_carta      IN ORGANO_EN_MESA.ID_carta%TYPE
+        p_id_carta      IN CUBRE_ORGANO.ID_carta_cubierta%TYPE
     );
 
     PROCEDURE validar_turno_cubre (
@@ -243,3 +243,4 @@ CREATE OR REPLACE PACKAGE BODY pkg_reglas_del_juego AS
 
 END pkg_reglas_del_juego;
 /
+

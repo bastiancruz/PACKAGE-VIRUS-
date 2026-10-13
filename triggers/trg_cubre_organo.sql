@@ -1,13 +1,47 @@
 CREATE OR REPLACE TRIGGER trg_despues_cubre
-AFTER INSERT ON CUBRE_ORGANO
-FOR EACH ROW
-BEGIN
+FOR INSERT ON CUBRE_ORGANO
+COMPOUND TRIGGER
 
-    pkg_reglas_del_juego.verificar_victoria(
-        p_jugada_id => :NEW.ID_jugada,
-        p_juego_id => :NEW.ID_juego
+    TYPE t_jugada_record IS RECORD (
+        id_juego  CUBRE_ORGANO.ID_juego%TYPE,
+        id_jugada CUBRE_ORGANO.ID_jugada%TYPE
     );
 
+    TYPE t_jugadas IS TABLE OF t_jugada_record
+        INDEX BY PLS_INTEGER;
+
+    v_jugadas t_jugadas;
+    v_contador PLS_INTEGER := 0;
+
+    AFTER EACH ROW IS
+    BEGIN
+        v_contador := v_contador + 1;
+
+        v_jugadas(v_contador).id_juego  := :NEW.ID_juego;
+        v_jugadas(v_contador).id_jugada := :NEW.ID_jugada;
+    END AFTER EACH ROW;
+
+    AFTER STATEMENT IS
+    BEGIN
+        FOR i IN 1 .. v_contador LOOP
+            pkg_reglas_del_juego.verificar_victoria(
+                p_jugada_id => v_jugadas(i).id_jugada,
+                p_juego_id  => v_jugadas(i).id_juego
+            );
+        END LOOP;
+    END AFTER STATEMENT;
+
+END trg_despues_cubre;
+/
+
+CREATE OR REPLACE TRIGGER trg_verificar_turno_cubre
+BEFORE INSERT ON CUBRE_ORGANO
+FOR EACH ROW
+BEGIN
+    pkg_reglas_del_juego.VALIDAR_TURNO_CUBRE(
+        p_id_juego  => :NEW.ID_juego,
+        p_id_jugada => :NEW.ID_jugada
+    );
 END;
 /
 
@@ -34,17 +68,6 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE TRIGGER trg_verificar_turno_cubre
-BEFORE INSERT ON CUBRE_ORGANO
-FOR EACH ROW
-BEGIN
-    pkg_reglas_del_juego.VALIDAR_TURNO_CUBRE(
-        p_id_juego  => :NEW.ID_juego,
-        p_id_jugada => :NEW.ID_jugada
-    );
-END;
-/
-
 CREATE OR REPLACE TRIGGER trg_verificar_color
 BEFORE INSERT OR UPDATE OF Color, ID_carta_cubierta
 ON CUBRE_ORGANO
@@ -55,3 +78,4 @@ BEGIN
         p_id_carta    => :NEW.ID_carta_cubierta
     );
 END;
+/

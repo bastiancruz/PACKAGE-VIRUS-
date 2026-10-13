@@ -1,5 +1,4 @@
 --Vista utilizada
-
 CREATE OR REPLACE VIEW v_organo_salud AS
 SELECT
     o.id_carta AS id_organo,
